@@ -73,17 +73,20 @@ public class TxHandler {
      * transaction for correctness, returning a mutually valid array of accepted transactions, and
      * updating the current UTXO pool as appropriate.
      */
-    public Transaction[] handleTxs(Transaction[] possibleTxs) {
+    public Transaction[] handleTxs(Transaction[] possibleTransaction) {
         // IMPLEMENT THIS
-    ArrayList<Transaction> valid=new ArrayList<Transaction>();
-        for (int i=0;i<possibleTxs.length;i++){
-        if(!isValidTx(possibleTxs[i])){
-            continue;
+        ArrayList<Transaction> valid=new ArrayList<Transaction>();
+        for (Transaction tx:possibleTransaction
+             ) {
+            if(!isValidTx(tx)){
+                continue;
+            }
+            valid.add(tx);
+            updatePool(tx);
         }
-        valid.add(possibleTxs[i]);
-        updatePool(possibleTxs[i]);
-    }
-        return valid.toArray(new Transaction[valid.size()]);
+        Transaction[] result=new Transaction[valid.size()];
+        result=valid.toArray(result);
+        return result;
 }
 
 }

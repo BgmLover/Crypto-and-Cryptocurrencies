@@ -1,7 +1,5 @@
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class MaxFeeTxHandler {
 
@@ -74,16 +72,92 @@ public class MaxFeeTxHandler {
      * updating the current UTXO pool as appropriate.
      */
     public Transaction[] handleTxs(Transaction[] possibleTxs) {
-        // IMPLEMENT THIS
-        ArrayList<Transaction> valid=new ArrayList<Transaction>();
-        for (int i=0;i<possibleTxs.length;i++){
-            if(!isValidTx(possibleTxs[i])){
-                continue;
+        List<TransactionWithFee> acceptedTx = new ArrayList<TransactionWithFee>();
+        for (Transaction tx : possibleTxs) {
+            if (isValidTx(tx)) {
+                TransactionWithFee txWithFee = new TransactionWithFee(tx);
+                acceptedTx.add(txWithFee);
+                removeConsumedCoinsFromPool(tx);
+                addCreatedCoinsToPool(tx);
             }
-            valid.add(possibleTxs[i]);
-            updatePool(possibleTxs[i]);
         }
-        return valid.toArray(new Transaction[valid.size()]);
+
+        Collections.sort(acceptedTx);
+        Transaction[] result = new Transaction[acceptedTx.size()];
+        for (int i = 0; i < acceptedTx.size(); i++) {
+            result[i] = acceptedTx.get(acceptedTx.size() - i - 1).tx;
+        }
+
+        return result;
+    }
+
+    class TransactionWithFee implements Comparable<TransactionWithFee> {
+        public Transaction tx;
+        private double fee;
+
+        public TransactionWithFee(Transaction tx) {
+            this.tx = tx;
+            this.fee = calcTxFee(tx);
+        }
+
+        @Override
+        public int compareTo(TransactionWithFee otherTx) {
+            double diff = fee - otherTx.fee;
+            if (diff > 0) {
+                return 1;
+            } else if (diff < 0) {
+                return -1;
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    private double calcTxFee(Transaction tx) {
+        double inputSum = calculateInputSum(tx);
+        double outputSum = calculateOutputSum(tx);
+
+        return inputSum - outputSum;
+    }
+
+    private double calculateOutputSum(Transaction tx) {
+        double outputSum = 0;
+        List<Transaction.Output> outputs = tx.getOutputs();
+        for (int j = 0; j < outputs.size(); j++) {
+            Transaction.Output output = outputs.get(j);
+            outputSum += output.value;
+        }
+        return outputSum;
+    }
+
+    private double calculateInputSum(Transaction tx) {
+        List<Transaction.Input> inputs = tx.getInputs();
+        double inputSum = 0;
+        for (int j = 0; j < inputs.size(); j++) {
+            Transaction.Input input = inputs.get(j);
+            UTXO utxo = new UTXO(input.prevTxHash, input.outputIndex);
+            Transaction.Output correspondingOutput = utxoPool.getTxOutput(utxo);
+            inputSum += correspondingOutput.value;
+        }
+        return inputSum;
+    }
+
+    private void addCreatedCoinsToPool(Transaction tx) {
+        List<Transaction.Output> outputs = tx.getOutputs();
+        for (int j = 0; j < outputs.size(); j++) {
+            Transaction.Output output = outputs.get(j);
+            UTXO utxo = new UTXO(tx.getHash(), j);
+            utxoPool.addUTXO(utxo, output);
+        }
+    }
+
+    private void removeConsumedCoinsFromPool(Transaction tx) {
+        List<Transaction.Input> inputs = tx.getInputs();
+        for (int j = 0; j < inputs.size(); j++) {
+            Transaction.Input input = inputs.get(j);
+            UTXO utxo = new UTXO(input.prevTxHash, input.outputIndex);
+            utxoPool.removeUTXO(utxo);
+        }
     }
 
 }
