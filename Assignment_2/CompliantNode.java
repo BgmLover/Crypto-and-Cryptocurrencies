@@ -1,26 +1,32 @@
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.HashSet;
 
 /* CompliantNode refers to a node that follows the rules (not malicious)*/
 public class CompliantNode implements Node {
 
+    private boolean[] followees;
+    private HashSet<Transaction> pendingTransactions;
+
     public CompliantNode(double p_graph, double p_malicious, double p_txDistribution, int numRounds) {
-        // IMPLEMENT THIS
+        this.pendingTransactions = new HashSet<Transaction>();
     }
 
     public void setFollowees(boolean[] followees) {
-        // IMPLEMENT THIS
+        this.followees = followees;
     }
 
     public void setPendingTransaction(Set<Transaction> pendingTransactions) {
-        // IMPLEMENT THIS
+        this.pendingTransactions.addAll(pendingTransactions);
     }
 
     public Set<Transaction> sendToFollowers() {
-        // IMPLEMENT THIS
+        return this.pendingTransactions;
     }
 
     public void receiveFromFollowees(Set<Candidate> candidates) {
-        // IMPLEMENT THIS
+        for(Candidate c: candidates) {
+            this.pendingTransactions.add(c.tx);
+        }
     }
 }
