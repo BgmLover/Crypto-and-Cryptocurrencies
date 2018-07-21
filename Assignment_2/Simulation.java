@@ -4,10 +4,7 @@
 // test your nodes. You will want to try creating some deviant nodes and
 // mixing them in the network to fully test.
 
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
-import java.util.HashMap;
+import java.util.*;
 
 public class Simulation {
 
@@ -19,20 +16,25 @@ public class Simulation {
       // code for all 3x3x3x2 = 54 combinations.
 
       int numNodes = 100;
-      double p_graph = Double.parseDouble(args[0]); // parameter for random graph: prob. that an edge will exist
-      double p_malicious = Double.parseDouble(args[1]); // prob. that a node will be set to be malicious
-      double p_txDistribution = Double.parseDouble(args[2]); // probability of assigning an initial transaction to each node 
-      int numRounds = Integer.parseInt(args[3]); // number of simulation rounds your nodes will run for
+      double p_graph = 0.2; // parameter for random graph: prob. that an edge will exist
+      double p_malicious = 0.45; // prob. that a node will be set to be malicious
+      double p_txDistribution = 0.05; // probability of assigning an initial transaction to each node
+      int numRounds = 10; // number of simulation rounds your nodes will run for
 
       // pick which nodes are malicious and which are compliant
       Node[] nodes = new Node[numNodes];
+      int CNodeNum=0,MNodeNum=0;
       for (int i = 0; i < numNodes; i++) {
-         if(Math.random() < p_malicious)
+         if(Math.random() < p_malicious){
             // When you are ready to try testing with malicious nodes, replace the
             // instantiation below with an instantiation of a MaliciousNode
             nodes[i] = new MaliciousNode(p_graph, p_malicious, p_txDistribution, numRounds);
-         else
-            nodes[i] = new CompliantNode(p_graph, p_malicious, p_txDistribution, numRounds);
+            MNodeNum++;
+         }
+         else {
+             nodes[i] = new CompliantNode(p_graph, p_malicious, p_txDistribution, numRounds);
+             CNodeNum++;
+         }
       }
 
 
@@ -112,15 +114,38 @@ public class Simulation {
       }
 
       // print results
+       Map<Set<Transaction>,Integer> finalSet = new HashMap<>();
+      Set<Transaction> maxTx = new HashSet<>();
+      int maxNum =0;
       for (int i = 0; i < numNodes; i++) {
          Set<Transaction> transactions = nodes[i].sendToFollowers();
-         System.out.println("Transaction ids that Node " + i + " believes consensus on:");
-         for (Transaction tx : transactions)
-            System.out.println(tx.id);
-         System.out.println();
-         System.out.println();
+         if(nodes[i].getClass()==CompliantNode.class)
+            maxTx.addAll(transactions);
+         if(!finalSet.containsKey(transactions)){
+             finalSet.put(transactions,1);
+         }
+         else{
+             int num = finalSet.get(transactions);
+             finalSet.put(transactions,num+1);
+         }
       }
 
+      for(Integer i :finalSet.values()){
+          maxNum=i>maxNum? i:maxNum;
+      }
+      System.out.println("number of cnode="+CNodeNum);
+       System.out.println("number of Mnode="+MNodeNum);
+       for(int i:finalSet.values()){
+           System.out.println(i);
+       }
+       System.out.println("the max number of consensus="+maxNum);
+       for(Set<Transaction> tx:finalSet.keySet()){
+           if(finalSet.get(tx)==maxNum){
+               System.out.println("the corresponding num of tx="+tx.size());
+           }
+       }
+
+       System.out.println("the number of tx="+maxTx.size());
    }
 
 
