@@ -3,7 +3,7 @@ import java.util.Set;
 
 public interface Node {
 
-    // NOTE: Node is an interface and does not have a constructor.
+    // NOTE: TreeNode is an interface and does not have a constructor.
     // However, your CompliantNode.java class requires a 4 argument
     // constructor as defined in Simulation.java
 

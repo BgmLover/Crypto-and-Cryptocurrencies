@@ -65,7 +65,7 @@ public class Simulation {
 
       // distribute the 500 Transactions throughout the nodes, to initialize
       // the starting state of Transactions each node has heard. The distribution
-      // is random with probability p_txDistribution for each Transaction-Node pair.
+      // is random with probability p_txDistribution for each Transaction-TreeNode pair.
       for (int i = 0; i < numNodes; i++) {
          HashSet<Transaction> pendingTransactions = new HashSet<Transaction>();
          for(Integer txID : validTxIds) {
